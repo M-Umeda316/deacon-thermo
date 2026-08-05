@@ -69,22 +69,26 @@ cu_gas_species)の要取得リストを統合し、重複を除いて優先度�
 | B21 | Terlingen et al. *ACS Catal.* **12** (2022) 5698 の SI | OA: PMC9087184 | LnOCl→LnCl₃ 塩素化 ΔG の元データ。**無料、即入手可** |
 | B22 | *Min. Metall. Explor.* (2021) carbochlorination レビュー | 10.1007/s42461-021-00490-z | Ln-O-Cl の ΔG 表と 400 ℃ 安定領域(Kellogg 図の独立チェック)。OA 版 hdl.handle.net/11336/151697 |
 | B23 | Kapała, J. et al. *J. Alloys Compd.* **451** (2008) 679–681 | 10.1016/j.jallcom.2007.04.085 | アルカリ-Ln ハロゲン化物の系列推算 ΔH(記述子モデルの比較対象) |
-| B24 | Gaune-Escard & Rycerz の熱容量系列(Z. Naturforsch. A **54** (1999) 229 / 397 ほか) | 10.1515/zna-1999-3-412 等 | K₃LnCl₆/Rb₃LnCl₆ の Cp。**zfn.mpdl.mpg.de(Vol.1–56 OA)で無料入手できる可能性** |
+| B24 | Gaune-Escard, M.; Rycerz, L. "Heat Capacity of K₃LnCl₆ Compounds with Ln = La, Ce, Pr, Nd" *Z. Naturforsch. A* **54** (1999) 229–235 | 10.1515/zna-1999-3-412 | K₃LnCl₆ の Cp(複塩を data.py に登録する際の Maier-Kelley 係数用)。OA だが bot 対策のためブラウザで取得のこと(De Gruyter or zfn.mpdl.mpg.de)。姉妹編の Rb₃LnCl₆ 版(54 (1999) 397、10.1515/zna-1999-6-709)は当面不要 |
 | B25 | Wang, Marin, Naterer, Gabriel(CuCl₂ 分解) | 掲載誌未特定 | 正式書誌の確定のみ(PDF は入手済み) |
 | B26 | Bjerrum グループの KCl-CuCl₂ 融液分光 | 未特定 | クロロ銅酸錯体の分光的証拠と生成定数。Andreasen/Mahan/Bjerrum *J. Chem. Eng. Data* **26** (1981) 195 の引用文献から辿る |
 | B27 | 無水 KCl-CuCl₂ 二元状態図の一次資料 | Zhang et al. *Appl. Catal. A* **365** (2009) 20–27 が引用 | KCuCl₃ の一致融解・液相線(B16 が最有力候補) |
 
 ---
 
-## 無料で今すぐ取れる見込みのもの(先行着手用)
+## 無料枠の取得結果(2026-08-05 実施)
 
-1. **Niazi の生データ**: Zenodo record 7287490(A7)
-2. **Terlingen SI**: PMC9087184(B21)
-3. **Gibson 2025 のプレプリント**: SSRN 10.2139/ssrn.5208841(A4)
-4. **Hattori BCSJ 1981**: J-STAGE(B10)
-5. **Acta Chem. Scand. 1978**: 全巻無料公開(B16)
-6. **Z. Naturforsch. A**: zfn.mpdl.mpg.de の OA アーカイブ(B24)
-7. **Min. Metall. Explor. 2021 の OA 版**: hdl.handle.net/11336/151697(B22)
+取得物は `docs/literature/pdf/`(git 管理外)に保存。
+
+| 対象 | 結果 | 備考 |
+|---|---|---|
+| Niazi 生データ(A7) | **取得済み** `niazi2022_kcl-cucl_rawdata.xlsx` | 3 組成(KCl 32/34/36 mol%)の融点・TGA・加水分解の生曲線 17 シート。**CALPHAD 係数は本文のみ**(依然 403)。生データから液相線を自前フィットする道あり |
+| Terlingen SI(B21) | **取得済み** `terlingen2022_si/` + 本文 `terlingen2022_acscatal.pdf` | Europe PMC 経由。本文 13 頁も入手 |
+| Acta Chem. Scand. 1978(B16) | **取得済み** `sutakshuto1978_cucl2-licl-kcl.pdf` | actachemscand.ki.ku.dk 公式。スキャン画像 PDF(テキスト層なし、読取は目視/OCR) |
+| Gibson SSRN プレプリント(A4) | **取得済み**(ユーザーがブラウザで取得) `gibson2025_reocl_heat_capacity_ssrn.pdf` | 検証済み。Nd の実測 (ΔH −60.5, ΔS −7.1) が採用値 (−58, −8) を支持、Y は (−38.2, +9.4) で系列一定仮定の破れを実証。詳細は lnocl_thermochemistry.md の追記 |
+| Z. Naturforsch. A(B24) | **スクリプト不可** | MPDL(Anubis)・De Gruyter(202 キュー)とも bot 対策。**OA なのでブラウザなら可** |
+| Hattori BCSJ 1981(B10) | **無料経路消滅** | BCSJ の OUP 移管(2024)で J-STAGE アーカイブが撤去され、academic.oup.com でペイウォール化。**有料枠へ格下げ** |
+| Min. Metall. Explor. OA 版(B22) | **リポジトリ停止中** | ri.conicet.gov.ar がタイムアウト。Unpaywall 上も OA 所在はここのみ。**後日リトライ** |
 
 ## 入手済み(再取得不要)
 

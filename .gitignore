@@ -15,3 +15,6 @@ htmlcov/
 outputs/
 *.png
 !docs/*.png
+
+# 入手した文献 PDF・生データ(著作物なのでリポジトリに含めない)
+docs/literature/pdf/
