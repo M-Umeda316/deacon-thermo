@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "deacon-thermo"
+version = "0.1.0"
+description = "Cu-K-Ln/Al2O3 系 Deacon 触媒の熱力学解析"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "scipy>=1.10"]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.7"]
+analysis = ["pandas>=2.0"]
+dev = ["pytest>=7.4", "pytest-cov", "ruff>=0.5"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/deacon_thermo"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "NPY"]

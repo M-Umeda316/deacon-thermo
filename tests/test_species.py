@@ -1,0 +1,102 @@
+"""既知の熱力学量でピン留めするテスト。
+
+熱力学コードは静かに間違うので、データを差し替えたときに
+他が壊れていないかをここで検出する。
+"""
+
+import numpy as np
+import pytest
+
+from deacon_thermo import DB
+from deacon_thermo.species import T_REF
+
+
+def test_G_at_298_reduces_to_dHf_minus_TS():
+    """298.15 K では G = dHf298 - T*S298 に一致するはず。"""
+    for name in ["HCl(g)", "H2O(g)", "CuCl(s)", "SmCl3(s)"]:
+        sp = DB[name]
+        expected = sp.dHf298 * 1000 - T_REF * sp.S298
+        assert np.isclose(sp.G(T_REF), expected, rtol=1e-10)
+
+
+def test_elements_have_zero_formation_enthalpy():
+    for name in ["O2(g)", "Cl2(g)"]:
+        assert DB[name].dHf298 == 0.0
+
+
+def test_hcl_oxidation_is_thermodynamically_favourable():
+    """4HCl + O2 = 2Cl2 + 2H2O は 380 C で自発的（K > 1）であること。"""
+    from deacon_thermo import equilibrium_constant
+
+    assert equilibrium_constant(653.15) > 1.0
+    assert np.isclose(DB["H2O(g)"].dHf298, -241.83, atol=0.1)
+    assert np.isclose(DB["HCl(g)"].dHf298, -92.31, atol=0.1)
+
+
+def test_cp_integration_is_consistent():
+    """H と S の Cp 積分が整合していること（dH/dT = Cp, T dS/dT = Cp）。"""
+    sp = DB["HCl(g)"]
+    T, dT = 600.0, 1e-3
+    dHdT = (sp.H(T + dT) - sp.H(T - dT)) / (2 * dT)
+    TdSdT = T * (sp.S(T + dT) - sp.S(T - dT)) / (2 * dT)
+    assert np.isclose(dHdT, TdSdT, rtol=1e-6)
+
+
+def test_transition_adds_entropy_consistently():
+    """相転移で H は dH、S は dH/T_tr だけ跳ぶこと。"""
+    sp = DB["CuCl(s)"]
+    T_tr, dH_tr = sp.transitions[0]
+    eps = 1e-6
+    assert np.isclose(sp.H(T_tr + eps) - sp.H(T_tr - eps), dH_tr * 1000, rtol=1e-4)
+    assert np.isclose(
+        sp.S(T_tr + eps) - sp.S(T_tr - eps), dH_tr * 1000 / T_tr, rtol=1e-4
+    )
+
+
+def test_supercooled_liquid_continuous_at_melting_point():
+    """融点で G_liquid と G_solid が一致すること。"""
+    sp = DB["CuCl(s)"]
+    T_fus = sp.transitions[0][0]
+    G_solid = sp.dHf298 * 1000 + sp._cp_int(T_fus) - T_fus * (
+        sp.S298 + sp._cp_over_T_int(T_fus)
+    )
+    assert np.isclose(float(sp.G_supercooled_liquid(T_fus)), G_solid, rtol=1e-9)
+
+
+def test_supercooled_liquid_above_solid_below_melting_point():
+    """融点以下では液体のほうが G が高いこと。"""
+    sp = DB["CuCl(s)"]
+    T = 653.15
+    assert float(sp.G_supercooled_liquid(T)) > float(sp.G(T))
+
+
+@pytest.mark.parametrize("ln", ["La", "Ce", "Nd", "Sm", "Gd", "Y"])
+def test_lanthanide_species_registered(ln):
+    for suffix in ["Cl3(s)", "OCl(s)", "2O3(s)"]:
+        assert f"{ln}{suffix}" in DB
+
+
+def test_oxychloride_estimator_is_consistent():
+    """LnOCl の推定が 1/3 Ln2O3 + 1/3 LnCl3 + DH の定義どおりであること。"""
+    from deacon_thermo.data import DH_OXYCHLORIDE
+
+    for ln in ["La", "Sm", "Gd"]:
+        expected = (
+            DB[f"{ln}2O3(s)"].dHf298 / 3
+            + DB[f"{ln}Cl3(s)"].dHf298 / 3
+            + DH_OXYCHLORIDE
+        )
+        assert np.isclose(DB[f"{ln}OCl(s)"].dHf298, expected)
+
+
+def test_estimates_are_flagged():
+    """推定値が確実に ESTIMATE として印されていること。
+
+    これが緩むと、検証していない数字が黙って結論に入り込む。
+    """
+    flagged = {s.name for s in DB.needs_verification()}
+    assert "CuCl2(g)" in flagged  # JANAF に無く、現在の支配蒸気種。最重要の要検証
+    assert "SmOCl(s)" in flagged
+    assert "Cu2OCl2(s)" in flagged
+    # Cu3Cl3(g) は JANAF 値で確定済み。EST に戻っていたらデータ退行を疑う
+    assert "Cu3Cl3(g)" not in flagged
