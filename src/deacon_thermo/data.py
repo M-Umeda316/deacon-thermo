@@ -155,11 +155,17 @@ LNOCL_PARAMS = {
         "Yang 2022 (Inorg. Chem. 61, 7590, Table 2, p.7593) の熱量測定 -73.5 とは"
         " 13 kJ/mol 不整合。反応温度域 (700-900 K) を直接測る Koch を優先",
     ),
+    "Pr": (
+        -63.5, +3.4, FAIR,
+        "Koch & Cunningham, JACS 76 (1954) 1471-1474 要約 (p.1471) の"
+        "加水分解平衡実測 (700-900 K) の 298 K 定数から換算。"
+        "実測により dG_hyd(653 K) は既定推定の +20 から +6.6 kJ/mol に確定",
+    ),
     "Nd": (
-        -60.49, -7.1, FAIR,
-        "dH: Yang 2022, Inorg. Chem. 61, 7590, Table 2, p.7593 (-60.49±0.42)。"
-        "dS: Gibson 2025, J. Chem. Thermodyn. 211, 107549 (298 K 反応量)。"
-        "Koch III (JACS 76 (1954) 1471) の転記後に照合予定",
+        -56.06, +2.47, FAIR,
+        "Koch & Cunningham, JACS 76 (1954) 1471-1474 要約 (p.1471) から換算"
+        "(La-Gd と手法統一)。独立な熱量測定 (Yang 2022 -60.49±0.42 +"
+        " Gibson 2025 dS -7.1) と dG_hyd(653 K) で 2.3 kJ/mol 整合",
     ),
     "Sm": (
         -47.3, +7.5, FAIR,
@@ -184,9 +190,9 @@ LNOCL_PARAMS = {
         "dH: Yang 2022, 同 Table 2 (-38.16±0.77)。"
         "dS: Gibson 2025, J. Chem. Thermodyn. 211, 107549 (298 K 反応量)",
     ),
-    # Ce, Pr, Eu, Dy は元素別実測なし -> 系列共通既定値 (EST)。
-    # Pr は Koch III (JACS 76 (1954) 1471) の転記待ち。Ce/Pr は酸化雰囲気では
-    # どのみち CeO2/PrO2 に行く (軸A)。
+    # Ce, Eu, Dy は元素別実測なし -> 系列共通既定値 (EST)。
+    # Ce は酸化雰囲気ではどのみち CeO2 に行く (軸A)。Eu/Dy は Burns 1998 の
+    # 推定表 (0817、転記待ち) で置換予定。
 }
 
 #: Shannon イオン半径 (CN=6, 3+) [Å]
