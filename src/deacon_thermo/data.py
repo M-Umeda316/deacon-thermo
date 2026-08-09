@@ -9,14 +9,17 @@
 
 LnOCl について
 --------------
-系列を通した実測値が揃わないため、既定では推定器を使う:
+LnOCl の G は反応量ベースの推定器で組む:
 
-    dHf(LnOCl) = 1/3 dHf(Ln2O3) + 1/3 dHf(LnCl3) + DH_OXYCHLORIDE
+    dHf(LnOCl) = 1/3 dHf(Ln2O3) + 1/3 dHf(LnCl3) + DH_i
+    S(LnOCl)   = 1/3 S(Ln2O3)   + 1/3 S(LnCl3)   + DS_i
 
-Ln2O3 と LnCl3 は比較的よく分かっているので、この形にすると
-**系列内の差**の精度が絶対値よりずっと良くなる（推定誤差が Ln 間で相関して
-差分で相殺されるため）。単一の Ln の絶対的な安定性を論じるときは
-この近似に頼らず一次資料を引くこと。
+(DH_i, DS_i) は元素別に文献値を持つ（LNOCL_PARAMS。Koch らの加水分解平衡実測、
+Yang らの熱量測定）。文献値が無い元素は系列共通の既定値
+(DH_OXYCHLORIDE, DS_OXYCHLORIDE) に落ちる。反応量（1/3 Ln2O3 + 1/3 LnCl3 →
+LnOCl の ΔH, ΔS）で持つのは、文献ごとの補助データ系の違い（磁気エントロピーの
+扱いなど）が反応量では相殺されるため。実測 DH_i は元素間で -35〜-60 kJ/mol と
+大きくばらつくので、**系列一定の仮定は使わないこと**（旧設計の教訓）。
 """
 
 from __future__ import annotations
@@ -130,21 +133,61 @@ DB.add(
 # ---------------------------------------------------------------------------
 # ランタノイド
 # ---------------------------------------------------------------------------
-#: LnOCl 推定に使う反応エンタルピー [kJ/mol]
-#:   1/3 Ln2O3 + 1/3 LnCl3 -> LnOCl
-#: 系列を通して一定と仮定している。感度解析は sensitivity.py を参照。
-#:
-#: -58.0 は Sm の唯一の文献アンカー (Jacob 2016, Bull. Mater. Sci. 39, 603 の
-#: Knacke 系 dG(1000 K) = -51.1 kJ/mol) を、下の dS = -8 J/mol/K と組で再現する値。
-#: 実測系 4 元素 (La/Nd/Sm/Gd) でも同換算値は -35〜-60 とばらつくので、
-#: 系列一定の仮定には ±15 kJ/mol 程度の元素依存誤差が残る
-#: (docs/literature/lnocl_thermochemistry.md §G2)。
-#: Koch & Cunningham (JACS 1952-54, 加水分解平衡の直接実測) の入手後に確定させる。
+#: 反応 1/3 Ln2O3 + 1/3 LnCl3 -> LnOCl の系列共通の既定値。
+#: **LNOCL_PARAMS に元素別値が無い元素にのみ使う**。感度解析（共通モードの
+#: 不確かさ掃引）は sensitivity.py を参照。
+#: -58.0 は Sm の Knacke 系アンカー (Jacob 2016, Bull. Mater. Sci. 39, 603 の
+#: dG(1000 K) = -51.1 kJ/mol) を DS = -8 と組で再現する値で、Koch の直接実測
+#: (653 K の dG と 0.1 kJ/mol 一致) により事後的に妥当性が確認された。
 DH_OXYCHLORIDE = -58.0
 
-#: LnOCl 推定に使う反応エントロピー [J/mol/K]（同反応）
-#: Burns/Jacob 系の採用値 dS_av = -8 (±4)。旧仮定 +8 は符号が逆だった。
+#: 同反応の系列共通エントロピー既定値 [J/mol/K]。Burns/Jacob 系の dS_av = -8 (±4)。
 DS_OXYCHLORIDE = -8.0
+
+#: 元素別の LnOCl 反応量 (DH_i [kJ/mol], DS_i [J/mol/K] または None=既定値, 信頼度, 出典)。
+#: 反応量で持つ理由は冒頭 docstring を参照。転記元の表はローカル管理
+#: (docs/literature/extracted/、機密方針により git 管理外)。
+LNOCL_PARAMS = {
+    "La": (
+        -60.4, +4.5, FAIR,
+        "Koch, Broido & Cunningham, JACS 74 (1952) 2349 の平衡実測"
+        "(JACS 75 (1953) 797 Table III に再掲) から当 DB の補助データで換算。"
+        "Yang 2022 (Inorg. Chem. 61, 7590, Table 2, p.7593) の熱量測定 -73.5 とは"
+        " 13 kJ/mol 不整合。反応温度域 (700-900 K) を直接測る Koch を優先",
+    ),
+    "Nd": (
+        -60.49, -7.1, FAIR,
+        "dH: Yang 2022, Inorg. Chem. 61, 7590, Table 2, p.7593 (-60.49±0.42)。"
+        "dS: Gibson 2025, J. Chem. Thermodyn. 211, 107549 (298 K 反応量)。"
+        "Koch III (JACS 76 (1954) 1471) の転記後に照合予定",
+    ),
+    "Sm": (
+        -47.3, +7.5, FAIR,
+        "Koch & Cunningham, JACS 75 (1953) 796-797, Table III, p.797 の"
+        "加水分解平衡実測 (700-900 K) の 298 K 定数から換算。"
+        "653 K の dG_hyd は実測と 0.1 kJ/mol で一致",
+    ),
+    "Gd": (
+        -49.9, +3.4, FAIR,
+        "同 Koch Table III, p.797。Yang 2022 の -48.57±0.70 と 1.3 kJ/mol で整合",
+    ),
+    "Ho": (
+        -35.04, None, FAIR,
+        "Yang 2022, Inorg. Chem. 61, 7590, Table 2, p.7593 (-35.04±0.70)。dS は既定値",
+    ),
+    "Er": (
+        -37.83, None, FAIR,
+        "Yang 2022, 同 Table 2 (-37.83±0.69)。dS は既定値",
+    ),
+    "Y": (
+        -38.16, +9.4, FAIR,
+        "dH: Yang 2022, 同 Table 2 (-38.16±0.77)。"
+        "dS: Gibson 2025, J. Chem. Thermodyn. 211, 107549 (298 K 反応量)",
+    ),
+    # Ce, Pr, Eu, Dy は元素別実測なし -> 系列共通既定値 (EST)。
+    # Pr は Koch III (JACS 76 (1954) 1471) の転記待ち。Ce/Pr は酸化雰囲気では
+    # どのみち CeO2/PrO2 に行く (軸A)。
+}
 
 #: Shannon イオン半径 (CN=6, 3+) [Å]
 IONIC_RADIUS = {
@@ -200,17 +243,24 @@ def _register_lanthanides() -> None:
                 {ln: 2, "O": 3}, FAIR, "Barin",
             )
         )
+        dh, ds, conf, src = LNOCL_PARAMS.get(
+            ln,
+            (
+                DH_OXYCHLORIDE, DS_OXYCHLORIDE, EST,
+                "元素別実測なし。系列共通既定値 (±15 kJ/mol 程度の元素依存誤差あり)",
+            ),
+        )
+        if ds is None:
+            ds = DS_OXYCHLORIDE
         DB.add(
             Species(
                 f"{ln}OCl(s)", "s",
-                dHf_ox / 3 + dHf_cl3 / 3 + DH_OXYCHLORIDE,
-                S_ox / 3 + S_cl3 / 3 + DS_OXYCHLORIDE,
+                dHf_ox / 3 + dHf_cl3 / 3 + dh,
+                S_ox / 3 + S_cl3 / 3 + ds,
                 (72.0, 12.0, -5.0),
                 {ln: 1, "O": 1, "Cl": 1},
-                EST,
-                f"推定: 1/3 {ln}2O3 + 1/3 {ln}Cl3 + {DH_OXYCHLORIDE} kJ/mol "
-                f"(dS {DS_OXYCHLORIDE} J/mol/K)。絶対値は要検証、系列内の差にも"
-                "±15 kJ/mol 程度の元素依存誤差がありうる (docs/literature 参照)",
+                conf,
+                f"1/3 {ln}2O3 + 1/3 {ln}Cl3 + ({dh} kJ/mol, {ds} J/mol/K)。{src}",
             )
         )
 

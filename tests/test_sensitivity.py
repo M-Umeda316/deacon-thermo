@@ -91,14 +91,15 @@ def test_flip_threshold_zeroes_the_margin(gas):
 def test_flip_threshold_consistent_with_dHf_threshold(gas):
     """stability.dHf_oxychloride_threshold（dHf 版の閾値）と整合すること。
 
-    dHf(LnOCl) = 1/3 dHf(Ln2O3) + 1/3 dHf(LnCl3) + dh なので、
-    dh の閾値 = dHf の閾値 - 1/3 dHf(Ln2O3) - 1/3 dHf(LnCl3)。
+    掃引の dh は「系列共通既定値をこの値に置き換える共通モードシフト」なので、
+    dHf(LnOCl) = 現行 dHf298 + (dh - DH_OXYCHLORIDE)。よって
+    dh の閾値 = dHf の閾値 - 現行 dHf298 + DH_OXYCHLORIDE。
     """
     for ln in ["La", "Sm", "Er"]:
         expected = (
             float(dHf_oxychloride_threshold(ln, gas))
-            - DB[f"{ln}2O3(s)"].dHf298 / 3
-            - DB[f"{ln}Cl3(s)"].dHf298 / 3
+            - DB[f"{ln}OCl(s)"].dHf298
+            + DH_OXYCHLORIDE
         )
         assert np.isclose(flip_threshold(ln, gas), expected, atol=1e-6)
 

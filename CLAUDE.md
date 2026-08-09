@@ -32,39 +32,55 @@ Cu-K-Ln/γ-Al₂O₃ 系の HCl 酸化（Deacon）触媒について:
 **主たる失活経路は Cu の揮発。** 相図よりも先に揮発性を見るべき理由がこれ。
 KCl / LnCl₃ を入れる主目的は Cu 塩化物の活量を下げること。
 
+## 決着したこと
+
+**Sm の相問題は決着（2026-08-09）。** Koch & Cunningham（JACS 75 (1953) 796、
+加水分解平衡の直接実測 700-900 K）の転記データで、モデルの dG_hyd が反応温度
+653 K で実測と 0.1 kJ/mol 一致（Gd も同様）。**SmCl₃ が安定なのは転化率 ~23%
+まで。床の大半と出口は SmOCl 側（出口余裕 -23 kJ/mol）。** LnOCl は元素別
+パラメータ（data.py の LNOCL_PARAMS。Koch 3 元素 + Yang 2022 熱量測定 6 元素）に
+移行済み。出口条件で塩化物側に残るのは La/Ce/Pr のみ（+4〜6 kJ/mol とぎりぎり）。
+文献では La 系で LaOCl・LaCl₃・中間塩素化度の相がいずれも活性と報告されており、
+オキシ塩化物は必ずしも失活相ではない — 「Sm の活性相はオキシ塩化物ベース」が
+新しい作業仮説。
+
 ## 現時点で未決着なこと
 
-**Sm の相は「床の軸方向で変わる」が現時点の作業仮説。** 2026-08 の文献調査
-（docs/literature/lnocl_thermochemistry.md）で LnOCl 推定を文献アンカー版に更新した
-（DH_OXYCHLORIDE -30 → -58 kJ/mol、ΔS +8 → -8 J/mol/K。Sm の Knacke 系
-ΔG(1000 K) = -51.1 kJ/mol を再現する組）。この値では SmCl₃ が安定なのは
-転化率 約 23% までで、床の大半は SmOCl 側、出口余裕は -23 kJ/mol。
-ただし confidence=ESTIMATE のままで、決定打は Koch & Cunningham
-（JACS 1952-54、加水分解平衡の直接実測。Sm は 75(1953)796）の入手。
-文献では La 系で LaOCl・LaCl₃・中間塩素化度の相がいずれも活性と報告されており、
-オキシ塩化物は必ずしも失活相ではない。
-
-**「系列内の差は絶対値より信頼できる」には限界が見つかった。** 実測系 4 元素
-（La/Nd/Sm/Gd）の DH 換算値は -35〜-60 kJ/mol と単調でなくばらつき、重希土側は
-3D→2D 構造転移（TmOCl）で系列一定の仮定自体が破れる。系列比較の結論には
-±15 kJ/mol 程度の元素依存誤差の但し書きを付けること。
+**「系列内の差は絶対値より信頼できる」は共通モード誤差に限る。** 実測 DH_i は
+-35〜-60 kJ/mol と元素でばらつく（sensitivity.py の掃引は共通モードのみを表現）。
+元素別実測が無い Ce/Pr/Eu/Dy は共通既定値（-58）のままで、**特に Dy の系列順位は
+未実測アーティファクトの疑いが強い**（実測済みの隣接元素 Ho は -35）。
+La は Koch（平衡実測）と Yang（熱量測定）が 13 kJ/mol 食い違う（反応温度域を
+直接測る Koch を採用中）。Pr/Nd は Koch III（JACS 76 (1954) 1471）の転記待ち。
 
 **旧「理想 Temkin が寿命を 2 桁外す」問題は Cu₃Cl₃(g) データ誤りが主因だった。**
 JANAF 値（-258.571 / 429.526）への差し替えで解消し、xfail は通常テストに昇格済み。
-ただし差し替え後の反応条件での支配蒸気種は CuCl₂(g)（要検証、JANAF に気相データ
-無し）に移ったので、揮発の絶対値は依然 CuCl₂(g) に人質に取られている
-（Wächter & Schäfer 1980 が唯一の手がかり）。クロロ銅酸錯体（CuCl₃²⁻, CuCl₄²⁻）
-による安定化は実在する（Ruthven & Kenney 1968: KCl 系融液は非理想）が、
-寿命の説明に必須ではなくなった。定量は `fit_interactions()` の較正で行う。
-なお平衡塩素圧データからは W(CuCl₂,X) と W(CuCl,X) の差しか決まらない
-（縮退。`melt.py` の docstring 参照）。
+差し替え後の反応条件での支配蒸気種は CuCl₂(g)（要検証、JANAF に気相データ無し）で、
+揮発の絶対値は CuCl₂(g) に人質に取られている（Wächter & Schäfer, ZAAC 471 (1980)
+38 が唯一の手がかり）。
+
+**融液の非理想性は較正済み（ドライラン段階）。** Fontana 1952（30 mol% KCl の
+平衡塩素圧 33 点）+ Niazi 2022（KCl-CuCl の CALPHAD、W(CuCl,KCl) の固定に使用）で
+W(CuCl₂,KCl) - W(CuCl,KCl) = **+40 kJ/mol** が確定（RMS ×1.24）。つまり
+**KCl は Cu(I) を Cu(II) より強く安定化する**（K₂CuCl₃ の存在と整合。
+「クロロ銅酸錯体が Cu(II) を安定化して揮発を抑える」という旧仮説は逆向きだった）。
+参照条件の寿命は理想 11,900 h / 較正後 6,900 h で、実測「≥9600 h」を挟む。
+W(Cu-LnCl₃) は未較正（Ruthven & Kenney, JINC 30 (1968) 931 の四元系データ待ち）。
+較正値の melt.py への組み込みは R&K 入手後にまとめて行う
+（記録: docs/literature/extracted/calibration_dryrun_2026-08-09.md、ローカル）。
 
 ## データの扱い方（最重要）
 
-計算結果は `data.py` の数字にぶら下がっている。特に **SmOCl の ΔHf₂₉₈**（推定式の
-DH_OXYCHLORIDE / DS_OXYCHLORIDE）と **CuCl₂(g) の ΔHf/S°**（現在の支配蒸気種、
-JANAF に無い）の 2 つが結論を直接左右する。Cu₃Cl₃(g) は JANAF で確定済み。
+計算結果は `data.py` の数字にぶら下がっている。結論を直接左右する残りの急所は
+**CuCl₂(g) の ΔHf/S°**（現在の支配蒸気種、JANAF に無い）。SmOCl は Koch の
+直接実測で決着済み、Cu₃Cl₃(g) は JANAF で確定済み。
 2026-08 の文献調査報告（要取得リスト付き）が `docs/literature/` にある。
+
+**有料文献の扱い（機密方針、2026-08-09）:** スキャン・PDF は AI に読ませず、
+必要な数値はユーザーが紙面から転記する（依頼リスト = docs/literature/wanted_data.md、
+転記形式の見本 = 過去の extracted/ ファイル）。転記した表は
+`docs/literature/extracted/`（git 管理外）に置き、リポジトリに入れてよいのは
+**出典・ページ付きの個別定数のみ**（data.py の LNOCL_PARAMS が例）。
 
 - 全ての種に `confidence` と `source` を持たせてある。`DB.report()` で
   要検証のものが一覧できる。
@@ -116,16 +132,15 @@ lanthanides.py 系列比較と記述子
 
 ## 作業の優先順位
 
-1. 要取得文献の入手（優先順は docs/literature/ の各報告書末尾。トップは
-   Koch & Cunningham JACS 75(1953)796 [Sm 加水分解平衡]、
-   Ruthven & Kenney JINC 30(1968)931 [融液平衡塩素圧、KCl/LaCl₃ 系]、
-   Thiel & Seifert Thermochim. Acta 133(1988)275 [Sm 複塩]、
-   Fontana IEC 44(1952)363+369、Wächter & Schäfer ZAAC 1980 [CuCl₂(g)]）
-2. Ruthven & Kenney / Fontana のデータを `ClObservation` に入れて
-   `fit_interactions()` で活量モデルを較正（W の縮退は KCl-CuCl の
-   CALPHAD 評価 [Niazi 2021] を `fixed` に入れて解く）
-3. K-Cu / K-Ln 複塩を data.py に登録し、`assemblage.py` の
+1. 転記待ちの消化（docs/literature/wanted_data.md）: Koch III の Pr/Nd（P2-3）、
+   Seifert レビューの K 系複塩表（P2-1/2-2、特に Sm）、Koch I/II の測定温度域
+2. 未入手文献: Ruthven & Kenney JINC 30(1968)931 [W(Cu-LaCl₃) の唯一のデータ]、
+   Wächter & Schäfer ZAAC 471(1980)38 [CuCl₂(g)]、Seifert & Büchel ZAAC 624
+   (1998)342 [Y 複塩、Y/Ho 対照の片割れ]
+3. 較正値（Fontana+Niazi の W）を melt.py の既定モデルに組み込み、
+   揮発・寿命の系列予測を元素別 LNOCL_PARAMS と合わせて再生成
+4. K-Cu / K-Ln 複塩を data.py に登録し、`assemblage.py` の
    カチオン組成断面で複塩仮説を検証（380 ℃ では K₂LnCl₅ のみ固相候補、
    K₃LnCl₆ の安定境界が Sm-Gd 付近にある点に注意）
-4. Ln 系列の記述子表を出し、実験計画（Nd, Gd, Ce, La, Y/Ho）に落とす
-5. 必要なら液相線に進む（ここで初めて pycalphad + MQMQA）
+5. Ln 系列の記述子表を出し、実験計画（Nd, Gd, Ce, La, Y/Ho）に落とす
+6. 必要なら液相線に進む（ここで初めて pycalphad + MQMQA）

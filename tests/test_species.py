@@ -77,16 +77,22 @@ def test_lanthanide_species_registered(ln):
 
 
 def test_oxychloride_estimator_is_consistent():
-    """LnOCl の推定が 1/3 Ln2O3 + 1/3 LnCl3 + DH の定義どおりであること。"""
-    from deacon_thermo.data import DH_OXYCHLORIDE
+    """LnOCl の G が 1/3 Ln2O3 + 1/3 LnCl3 + (DH_i, DS_i) の定義どおりであること。
 
-    for ln in ["La", "Sm", "Gd"]:
-        expected = (
-            DB[f"{ln}2O3(s)"].dHf298 / 3
-            + DB[f"{ln}Cl3(s)"].dHf298 / 3
-            + DH_OXYCHLORIDE
+    元素別値(LNOCL_PARAMS)があればそれを、無ければ系列共通既定値を使う。
+    """
+    from deacon_thermo.data import DH_OXYCHLORIDE, DS_OXYCHLORIDE, LNOCL_PARAMS
+
+    for ln in ["La", "Sm", "Gd", "Dy"]:
+        dh, ds = LNOCL_PARAMS.get(ln, (DH_OXYCHLORIDE, DS_OXYCHLORIDE))[:2]
+        ds = DS_OXYCHLORIDE if ds is None else ds
+        sp = DB[f"{ln}OCl(s)"]
+        assert np.isclose(
+            sp.dHf298, DB[f"{ln}2O3(s)"].dHf298 / 3 + DB[f"{ln}Cl3(s)"].dHf298 / 3 + dh
         )
-        assert np.isclose(DB[f"{ln}OCl(s)"].dHf298, expected)
+        assert np.isclose(
+            sp.S298, DB[f"{ln}2O3(s)"].S298 / 3 + DB[f"{ln}Cl3(s)"].S298 / 3 + ds
+        )
 
 
 def test_estimates_are_flagged():
@@ -96,7 +102,8 @@ def test_estimates_are_flagged():
     """
     flagged = {s.name for s in DB.needs_verification()}
     assert "CuCl2(g)" in flagged  # JANAF に無く、現在の支配蒸気種。最重要の要検証
-    assert "SmOCl(s)" in flagged
     assert "Cu2OCl2(s)" in flagged
-    # Cu3Cl3(g) は JANAF 値で確定済み。EST に戻っていたらデータ退行を疑う
-    assert "Cu3Cl3(g)" not in flagged
+    assert "DyOCl(s)" in flagged  # 元素別実測が無く系列共通推定のまま
+    # 実測で確定済みの種。EST に戻っていたらデータ退行を疑う
+    assert "Cu3Cl3(g)" not in flagged  # JANAF Cl-132
+    assert "SmOCl(s)" not in flagged  # Koch & Cunningham 1953 の平衡実測
