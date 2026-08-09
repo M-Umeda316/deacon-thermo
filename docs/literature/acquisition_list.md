@@ -22,7 +22,7 @@ cu_gas_species)の要取得リストを統合し、重複を除いて優先度�
 | S3 | Fontana, C. M.; Gorin, E.; Kidder, G. A.; Meredith, C. S. *Ind. Eng. Chem.* **44** (1952) 363–368 | 10.1021/ie50506a044 | **CuCl-CuCl₂-KCl 三元の p(Cl₂) 表と相図・凝固点**。S2 の独立クロスチェック+液相線データ | ACS Legacy Archives |
 | S4 | Fontana, C. M.; Gorin, E.; Kidder, G. A.; Kinney, R. *Ind. Eng. Chem.* **44** (1952) 369–373 | 10.1021/ie50506a045 | **同融液の酸素平衡圧・酸化物溶解度**。オキシ塩化物問題の融液側 | ACS Legacy Archives |
 | S5 | Thiel, G.; Seifert, H. J. *Thermochim. Acta* **133** (1988) 275–282 | 10.1016/0040-6031(88)87169-7 | **K₃SmCl₆ / K₂SmCl₅ / KSm₂Cl₇ の ΔH, ΔG, ΔS と状態図**。参照系 Sm の複塩データ唯一の一次資料。K₃SmCl₆ の安定境界(380 ℃ を跨ぐのが Sm-Gd 付近)の裁定 | Elsevier |
-| S6 | Wächter, H.; Schäfer, H. *Z. Anorg. Allg. Chem.* (1980)(巻・頁未確定) | — | **CuCl₂(g) 関連の平衡データ**。Cu₃Cl₃ の JANAF 差し替え後の支配蒸気種 CuCl₂(g)(EST)の唯一の手がかり。まず完全書誌の確定から | Wiley |
+| S6 | Wächter, H.; Schäfer, H. "Das Gleichgewicht CuCl₂,f + Al₂Cl₆,g = CuAl₂Cl₈,g und die beteiligten Nebenreaktionen" *Z. Anorg. Allg. Chem.* **471** (1980) 38–58(書誌は Crossref で確定済み) | 10.1002/zaac.19804710105 | **CuCl₂(g) 関連の平衡データ**。Cu₃Cl₃ の JANAF 差し替え後の支配蒸気種 CuCl₂(g)(EST)の唯一の手がかり | Wiley |
 | S7 | Koch; Broido; Cunningham. *JACS* **74**(9) (1952) 2349–2351(La)/ Koch; Cunningham. *JACS* **76**(6) (1954) 1471–1474(Pr/Nd) | 10.1021/ja01129a049 / 10.1021/ja01635a003 | S1 の姉妹編。**La が系列比較の基準点、Pr/Nd は Knacke 系と JCT 2025 系の食い違い(Nd で 28 kJ/mol)の裁定** | ACS Legacy Archives |
 
 ## A: 系列・複塩・活量モデルの確定に必要
