@@ -24,9 +24,13 @@ from .assemblage import (
 from .data import CALIBRATED_INTERACTIONS, DB, LANTHANIDES
 from .gas import GasState, equilibrium_constant, gas_state, operating_line
 from .lanthanides import (
+    REFERENCE_CATIONS,
     LanthanideDescriptors,
+    chloride_fraction,
     descriptors,
     hydrolysis_ranking,
+    k3lncl6_stability_limit,
+    oxychloride_params,
     radius_controls,
     survey,
 )
@@ -81,7 +85,8 @@ __all__ = [
     "partial_pressures", "cu_vapour_fraction", "lifetime", "ReactorSpec",
     "required_activity_coefficient",
     "LanthanideDescriptors", "descriptors", "survey", "hydrolysis_ranking",
-    "radius_controls",
+    "radius_controls", "REFERENCE_CATIONS", "oxychloride_params",
+    "k3lncl6_stability_limit", "chloride_fraction",
     "MarginSweep", "chloride_margin_at", "sweep_margins",
     "flip_threshold", "flip_thresholds",
     "Assemblage", "CationGrid", "assemblage_at", "stable_assemblage",

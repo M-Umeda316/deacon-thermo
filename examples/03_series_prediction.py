@@ -17,11 +17,12 @@ from deacon_thermo import (
     ReactorSpec,
     gas_state,
     hydrolysis_ranking,
+    k3lncl6_stability_limit,
     lifetime,
     redox_split,
     stable_assemblage,
 )
-from deacon_thermo.data import DB, K_LN_DOUBLE_SALTS
+from deacon_thermo.data import DB
 from deacon_thermo.melt import RegularSolution, calibrated_model
 
 T_GAS = 653.15  # 380 C、相の判定
@@ -50,25 +51,6 @@ def half_lives(ln: str, spec: ReactorSpec | None = None) -> list[float]:
         _, melt = redox_split(1.0, P_CL2_VOL, T_VOL, diluents, melt_model(ln, w))
         out.append(lifetime(melt, T_VOL, spec)[0])
     return out
-
-
-def k3lncl6_lower_bound(ln: str) -> tuple[float, str] | None:
-    """K3LnCl6 の安定下限温度 [K] と、その由来。
-
-    Seifert の表に L/H 転移がある Ln はその転移温度（低温形が別にあるので
-    「この化合物」の下限は転移点）、無ければ合成反応 dG = 0 を解く。
-    Cp が Neumann-Kopp なので dG は厳密に dH - T dS で、根は解析的に出る。
-    """
-    name = f"K3{ln}Cl6(s)"
-    entry = K_LN_DOUBLE_SALTS.get(name)
-    if entry is None:
-        return None
-    _, n_k, n_l, dh, ds, transitions = entry
-    if transitions:
-        return float(transitions[0][0]), "L"
-    if ds == 0.0:
-        return None
-    return dh * 1000.0 / ds, "S"
 
 
 def assemblage_summary(ln: str, gas) -> str:
@@ -104,7 +86,7 @@ def main():
     print("-" * 105)
 
     for ln in sorted(LANTHANIDES, key=lambda e: -margins[e]):
-        bound = k3lncl6_lower_bound(ln)
+        bound = k3lncl6_stability_limit(ln)
         bound_txt = f"{bound[0]:.0f}{bound[1]}" if bound else "-"
         lo, mid, hi = half_lives(ln, spec)
         print(f"{ln:4s} {margins[ln]:+8.1f}  {assemblage_summary(ln, gas):<34s} "

@@ -155,12 +155,16 @@ def test_half_lives_are_currently_ln_independent(series):
 
 
 def test_k3lncl6_lower_bound_kinds(series):
-    """L/H 転移がある Ln は転移点、無い Ln は合成 dG=0 の根を返す。"""
-    assert series.k3lncl6_lower_bound("Sm") == pytest.approx((606.1, "L"), rel=1e-9)
-    T_ce, kind = series.k3lncl6_lower_bound("Ce")
+    """L/H 転移がある Ln は転移点、無い Ln は合成 dG=0 の根を返す。
+
+    実装は lanthanides.k3lncl6_stability_limit に移した（記述子と共用）ので、
+    ここでは example がそれを使っていることも同時に確認している。
+    """
+    assert series.k3lncl6_stability_limit("Sm") == pytest.approx((606.1, "L"), rel=1e-9)
+    T_ce, kind = series.k3lncl6_stability_limit("Ce")
     assert kind == "S"
     assert 250.0 < T_ce < 400.0
-    assert series.k3lncl6_lower_bound("La") is None  # 表に無い（存在しない）
+    assert series.k3lncl6_stability_limit("La") is None  # 表に無い（存在しない）
 
 
 def test_assemblage_summary_accounts_for_all_of_the_lanthanide(series):
