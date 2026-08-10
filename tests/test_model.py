@@ -221,13 +221,14 @@ def test_reactor_spec_gas_flow_positive():
 
 
 def test_ideal_model_reproduces_observed_lifetime():
-    """Cu-K-La/Al2O3 は 340 C で 9600 h 安定と報告されている。
+    """Cu-K-La/Al2O3 は 340 C で 9600 h 安定と報告されている（Feng 2015）。
 
-    かつては xfail だった（約 2 桁外れていた）が、原因はクロロ銅酸錯体の
-    未考慮ではなく Cu3Cl3(g) の暫定値の誤りで、JANAF 値への差し替えで解消した。
-    ただし差し替え後の支配蒸気種は CuCl2(g)（confidence=ESTIMATE）なので、
-    このテストの合否は CuCl2(g) データの検証に依存している。
+    かつては xfail だった（約 2 桁外れ）が、原因は Cu3Cl3(g) の暫定値の誤りで
+    JANAF 差し替えで解消した。GHSV は Feng 2015 の実条件 450 L/kg/h を使う
+    （ReactorSpec 既定の 6000 は設計点であって、この実測の条件ではない。
+    旧テストは 6000 のまま偶然通っていた）。支配蒸気種 CuCl2(g) の dHf は
+    ESTIMATE のままなので、このテストは「dHf >= 下限」の整合性チェックでもある。
     """
     _, melt = redox_split(1.0, 0.32, 613.15, {"KCl": 1.0, "LaCl3": 0.3})
-    t_half, _ = lifetime(melt, 613.15)
+    t_half, _ = lifetime(melt, 613.15, ReactorSpec(ghsv=450.0))
     assert t_half > 9600.0
