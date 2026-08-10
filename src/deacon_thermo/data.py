@@ -286,6 +286,34 @@ K_LN_DOUBLE_SALTS = {
 }
 
 
+# ---------------------------------------------------------------------------
+# 融液
+# ---------------------------------------------------------------------------
+#: 較正済み融液相互作用パラメータ [J/mol]。値は float (T 非依存) または (a, b) = a + bT。
+#: melt.calibrated_model() がこれを RegularSolution に組む。
+#:
+#: フィット条件: Fontana の平衡塩素圧 33 点 (695-781 K、30 mol% KCl 固定) に
+#: kind="p" (残差 = ln p_calc - ln p_obs) で least_squares。W(CuCl,KCl) は
+#: Niazi の CALPHAD 最適化値に固定 (塩素圧データは W(CuCl2,X) - W(CuCl,X) の
+#: 差にしか感度が無く、片方を独立データで固定しないと決まらないため。
+#: melt.fit_interactions の Notes 参照)。
+#: RMS(ln p) = 0.218 (理想 Temkin では 1.24、平均 -1.16 = p(Cl2) を 3.2 倍過小評価)。
+#: 拘束されているのは差 W(CuCl2,KCl) - W(CuCl,KCl) = +41.1 kJ/mol (744 K) のほうで、
+#: 個別値は Niazi 固定値に条件付き。
+#:
+#: 物理的含意: KCl は Cu(I) を Cu(II) より強く安定化する (K2CuCl3 が安定複塩で
+#: あることと整合)。したがって K 添加は固定 p(Cl2) で Cu(II) 率を下げ、
+#: gamma(CuCl2) > 1 なので CuCl2(g) 経由の揮発はむしろ増える向きに働く。
+CALIBRATED_INTERACTIONS: dict[tuple[str, str], float | tuple[float, float]] = {
+    ("CuCl", "KCl"): (-27373.0, 3.94),
+    # ^ Niazi 2022, Materialia 21, 101296, Table 3, p.8 (液相 KCl-CuCl の L0)。固定
+    ("CuCl2", "KCl"): 16683.2,
+    # ^ Fontana 1952, Ind. Eng. Chem. 44, 363, Table 4, p.367 への再フィット
+    ("CuCl", "CuCl2"): -6777.4,
+    # ^ 同上（2 パラメータ同時フィット。初期値を変えても同じ解に落ちる）
+}
+
+
 def _register_double_salts() -> None:
     """複塩を二元塩化物からの合成で登録する。
 

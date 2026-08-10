@@ -7,7 +7,8 @@
   IdealTemkin  : カチオン副格子上の理想混合。錯体形成による安定化を含まないため
                  Cu 蒸気圧を過大評価する。下限見積り用。
   RegularSolution : Temkin + 対相互作用パラメータ。文献の平衡塩素圧データに
-                 fit_interactions() でフィットして使う。
+                 fit_interactions() でフィットして使う。W は温度依存 (a + bT) も取れる。
+                 較正済みのものは calibrated_model()（定数は data.CALIBRATED_INTERACTIONS）。
 
 較正データの向き:
   文献の測定は「仕込み組成（Cu(II)/Cu(I) 比が既知）+ 温度 + p(Cl2)」の形が普通で、
@@ -26,7 +27,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.optimize import brentq, least_squares
 
-from .data import DB
+from .data import CALIBRATED_INTERACTIONS, DB
 from .species import R
 
 #: 融液成分 -> カチオン
@@ -52,26 +53,50 @@ class IdealTemkin(ActivityModel):
 
 @dataclass
 class RegularSolution(ActivityModel):
-    """RT ln(gamma_i) = sum_j W_ij * y_j^2
+    """RT ln(gamma_i) = sum_j W_ij(T) * y_j^2
 
     W_ij < 0 が安定化（錯体形成）に対応する。
+
+    interactions の値は次のどちらでもよい:
+
+      float          : W = 一定 [J/mol]
+      (a, b) タプル  : W(T) = a + b*T [J/mol]（a [J/mol], b [J/mol/K]）
+
+    後者は CALPHAD の L = a + bT と同形で、過剰エントロピー (-b) を分離できる。
+    文献の最適化パラメータ（Niazi らの L0 など）をそのまま持ち込むために要る。
     """
 
-    interactions: dict[tuple[str, str], float] = field(default_factory=dict)
+    interactions: dict[tuple[str, str], float | tuple[float, float]] = field(
+        default_factory=dict
+    )
 
-    def _W(self, a: str, b: str) -> float:
-        return self.interactions.get((a, b), self.interactions.get((b, a), 0.0))
+    def _W(self, a: str, b: str, T) -> float:
+        w = self.interactions.get((a, b), self.interactions.get((b, a), 0.0))
+        if isinstance(w, tuple | list):
+            w0, w1 = w
+            return w0 + w1 * T
+        return w
 
     def activity(self, salt, fractions, T):
         y_i = fractions.get(salt, 0.0)
         if y_i == 0.0:
             return 0.0
         ln_gamma = sum(
-            self._W(salt, other) * y_j**2
+            self._W(salt, other, T) * y_j**2
             for other, y_j in fractions.items()
             if other != salt
         ) / (R * T)
         return y_i * np.exp(ln_gamma)
+
+
+def calibrated_model() -> RegularSolution:
+    """data.CALIBRATED_INTERACTIONS から較正済みモデルを組む。
+
+    既定を差し替えないのは、較正が Cu-K 系（KCl 30 mol%）でしか効いておらず、
+    W(Cu 塩化物, LnCl3) が未較正のままだから。Ln を含む系に使うときは
+    その未較正分を感度帯として別に振ること（examples/03 参照）。
+    """
+    return RegularSolution(dict(CALIBRATED_INTERACTIONS))
 
 
 @dataclass
@@ -249,13 +274,15 @@ def fit_interactions(
         CuCl2-CuCl-KCl / CuCl2-CuCl-KCl-LaCl3 融液上の平衡塩素圧測定値を入れる。
     pairs : [('CuCl2', 'KCl'), ('CuCl', 'CuCl2'), ...]
     x0 : スカラー（全パラメータ共通）または pairs と同じ長さの初期値 [J/mol]
-    fixed : {('CuCl', 'KCl'): -8000.0, ...}
-        フィットせず固定する W。
+    fixed : {('CuCl', 'KCl'): -8000.0 または (-27373.0, 3.94), ...}
+        フィットせず固定する W。RegularSolution と同じく (a, b) で
+        W = a + bT を渡せる（文献の最適化パラメータの持ち込み用）。
 
     Notes
     -----
-    W は温度非依存として扱う。過剰エントロピー項を分離できるほど
-    データが揃っていないため、温度依存を入れても縮退するだけになる。
+    **フィットする** W は温度非依存（float）として扱う。過剰エントロピー項を
+    分離できるほどデータが揃っていないため、温度依存を入れても縮退するだけになる。
+    温度依存が独立に判っている組は fixed に (a, b) で渡すこと。
 
     **塩素圧データは a(CuCl2)^2/a(CuCl)^2 にしか感度がない。** 同じ希釈剤 X に
     対する W(CuCl2, X) と W(CuCl, X) は差だけが決まり、個別には決まらない

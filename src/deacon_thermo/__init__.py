@@ -21,7 +21,7 @@ from .assemblage import (
     default_candidates,
     stable_assemblage,
 )
-from .data import DB, LANTHANIDES
+from .data import CALIBRATED_INTERACTIONS, DB, LANTHANIDES
 from .gas import GasState, equilibrium_constant, gas_state, operating_line
 from .lanthanides import (
     LanthanideDescriptors,
@@ -35,6 +35,7 @@ from .melt import (
     IdealTemkin,
     Melt,
     RegularSolution,
+    calibrated_model,
     equilibrium_p_cl2,
     fit_interactions,
     redox_K,
@@ -69,12 +70,13 @@ from .volatility import (
 __version__ = "0.1.0"
 
 __all__ = [
-    "DB", "LANTHANIDES", "Species", "Confidence",
+    "DB", "LANTHANIDES", "CALIBRATED_INTERACTIONS", "Species", "Confidence",
     "GasState", "gas_state", "operating_line", "equilibrium_constant",
     "lanthanide_phases", "copper_phases", "stability_map",
     "hydrolysis_dG", "hydrolysis_K", "stable_chloride", "hydrolysis_margin",
     "dHf_oxychloride_threshold",
-    "Melt", "IdealTemkin", "RegularSolution", "redox_split", "fit_interactions",
+    "Melt", "IdealTemkin", "RegularSolution", "calibrated_model",
+    "redox_split", "fit_interactions",
     "ClObservation", "equilibrium_p_cl2", "redox_K",
     "partial_pressures", "cu_vapour_fraction", "lifetime", "ReactorSpec",
     "required_activity_coefficient",
