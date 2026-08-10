@@ -234,6 +234,79 @@ _LN_DATA = {
 LANTHANIDES = tuple(_LN_DATA)
 
 
+#: K-Ln 複塩の生成反応量。name -> (Ln, n_KCl, n_LnCl3, dHf [kJ/mol], dSf [J/mol/K],
+#: transitions)。反応 n_KCl KCl(s) + n_LnCl3 LnCl3(s) -> 化合物(s)。
+#: 出典: Seifert 2002, J. Therm. Anal. Cal. 67, 789-826, Table 8, p.817
+#: (溶解熱量測定 + 固体電解質 EMF、dG は 573 K)。K0.6LnCl3.6 / K0.5LnCl3.5 の
+#: LnCl3 規格化行は化学量論式に戻して 5 倍 / 2 倍してある。
+#: K3LnCl6 (Ln = Sm, Eu, Gd) は低温形 (L) を基準に、L->H 転移を
+#: T_tr = ddH/ddS で登録(表の L/H 両行から導出)。
+#: K2CeCl5 / K2EuCl5 は原表の dG573 列が dH - T dS と不整合(誤植と判断し
+#: dH/dS 列を採用。docs/literature/extracted/p2-1.csv の注記参照)。
+#: K3LaCl6 と KLa2Cl7 は存在しない(表にも無い)ので登録しない。
+K_LN_DOUBLE_SALTS = {
+    "K2LaCl5(s)": ("La", 2, 1, -22.5, 15.1, ()),
+    "K3La5Cl18(s)": ("La", 3, 5, -26.5, 47.0, ()),
+    "K2CeCl5(s)": ("Ce", 2, 1, -29.1, 12.0, ()),
+    "K3Ce5Cl18(s)": ("Ce", 3, 5, -24.5, 45.5, ()),
+    "K3CeCl6(s)": ("Ce", 3, 1, 24.8, 79.9, ()),
+    "K2PrCl5(s)": ("Pr", 2, 1, -31.4, 13.4, ()),
+    "K3PrCl6(s)": ("Pr", 3, 1, 20.5, 82.2, ()),
+    "K2NdCl5(s)": ("Nd", 2, 1, -35.0, 11.9, ()),
+    "K3NdCl6(s)": ("Nd", 3, 1, 13.5, 79.8, ()),
+    "KNd2Cl7(s)": ("Nd", 1, 2, 3.2, 34.0, ()),
+    "K2SmCl5(s)": ("Sm", 2, 1, -41.8, 10.5, ()),
+    "K3SmCl6(s)": ("Sm", 3, 1, -11.2, 60.7, ((606.1, 8.0),)),
+    "KSm2Cl7(s)": ("Sm", 1, 2, -0.6, 42.0, ()),
+    "K2EuCl5(s)": ("Eu", 2, 1, -44.3, 9.7, ()),
+    "K3EuCl6(s)": ("Eu", 3, 1, -17.6, 58.7, ((630.4, 8.7),)),
+    "KEu2Cl7(s)": ("Eu", 1, 2, -6.4, 41.4, ()),
+    "K2GdCl5(s)": ("Gd", 2, 1, -49.7, 3.7, ()),
+    "K3GdCl6(s)": ("Gd", 3, 1, -26.3, 51.3, ((635.7, 8.9),)),
+    "KGd2Cl7(s)": ("Gd", 1, 2, -18.2, 29.8, ()),
+}
+
+
+def _register_double_salts() -> None:
+    """複塩を二元塩化物からの合成で登録する。
+
+    Cp は Neumann-Kopp(二元の和)なので、生成反応の dG(T) は厳密に
+    dH - T dS になり、Seifert の EMF の表現(dG 線形)と整合する。
+    二元側の融解転移は化合物には持ち込まない(いずれも固体で比較する)。
+    """
+    kcl = DB["KCl(s)"]
+    for name, (ln, n_k, n_l, dh, ds, trans) in K_LN_DOUBLE_SALTS.items():
+        lncl3 = DB[f"{ln}Cl3(s)"]
+        DB.add(
+            Species(
+                name, "s",
+                n_k * kcl.dHf298 + n_l * lncl3.dHf298 + dh,
+                n_k * kcl.S298 + n_l * lncl3.S298 + ds,
+                tuple(n_k * a + n_l * b for a, b in zip(kcl.cp, lncl3.cp, strict=True)),
+                {"K": n_k, ln: n_l, "Cl": n_k + 3 * n_l},
+                FAIR,
+                f"{n_k} KCl + {n_l} {ln}Cl3 + ({dh} kJ/mol, {ds} J/mol/K)。"
+                "Seifert 2002, JTAC 67, 789-826, Table 8, p.817 (EMF + 溶解熱量測定)",
+                trans,
+            )
+        )
+    # K-Cu(I) 複塩。380 C では融体側だが、相集合の候補としては登録しておく。
+    cucl = DB["CuCl(s)"]
+    DB.add(
+        Species(
+            "K2CuCl3(s)", "s",
+            2 * kcl.dHf298 + cucl.dHf298 + (-8.09),
+            2 * kcl.S298 + cucl.S298 + (-3.48),
+            tuple(2 * a + b for a, b in zip(kcl.cp, cucl.cp, strict=True)),
+            {"K": 2, "Cu": 1, "Cl": 3},
+            EST,
+            "2 KCl + CuCl + (-8.09 kJ/mol, -3.48 J/mol/K)。Niazi 2022, Materialia 21,"
+            " 101296, Table 3, p.8 (dH は ab initio 固定、S は最適化) から換算。"
+            "241 C 以上で分解(包晶)するので高温では融体の代理でしかない",
+        )
+    )
+
+
 def _register_lanthanides() -> None:
     for ln, (dHf_cl3, S_cl3, dHf_ox, S_ox) in _LN_DATA.items():
         DB.add(
@@ -272,3 +345,4 @@ def _register_lanthanides() -> None:
 
 
 _register_lanthanides()
+_register_double_salts()

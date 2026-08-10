@@ -69,8 +69,13 @@ ALKALI_CANDIDATES = ("KCl(s)",)
 LANTHANIDE_TEMPLATES = ("{ln}Cl3(s)", "{ln}OCl(s)", "{ln}2O3(s)")
 
 #: 複塩のテンプレート。DB に登録済みのものだけが候補に入る。
-#: 例: ("KCuCl3(s)", "K2CuCl4(s)", "K3{ln}Cl6(s)")
-DOUBLE_SALT_TEMPLATES: tuple[str, ...] = ()
+DOUBLE_SALT_TEMPLATES: tuple[str, ...] = (
+    "K2{ln}Cl5(s)",
+    "K3{ln}Cl6(s)",
+    "K{ln}2Cl7(s)",
+    "K3{ln}5Cl18(s)",
+    "K2CuCl3(s)",
+)
 
 
 def cation_content(name: str) -> dict[str, float]:

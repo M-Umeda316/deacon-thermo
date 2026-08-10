@@ -76,6 +76,31 @@ def test_lanthanide_species_registered(ln):
         assert f"{ln}{suffix}" in DB
 
 
+def test_k3smcl6_is_a_high_temperature_phase():
+    """K3SmCl6 の安定下限が 606 K(Seifert Table 8 から導出)を跨ぐこと。
+
+    573 K では KCl + K2SmCl5 に分解し、653 K(380 C の操業点)では安定。
+    参照系の操業温度が K3SmCl6 の安定域内にあることは複塩仮説の要。
+    """
+    for T, stable in [(573.15, False), (653.15, True)]:
+        dG = DB.G("K3SmCl6(s)", T) - DB.G("KCl(s)", T) - DB.G("K2SmCl5(s)", T)
+        assert (float(dG) < 0) == stable
+
+
+def test_double_salt_formation_reproduces_seifert_dG573():
+    """登録した複塩の生成 dG(573 K) が Seifert Table 8 の dG573 列を再現すること。"""
+    for name, n_k, n_l, ln, dg573 in [
+        ("K2SmCl5(s)", 2, 1, "Sm", -47.8),
+        ("K2GdCl5(s)", 2, 1, "Gd", -51.8),
+        ("KSm2Cl7(s)", 1, 2, "Sm", -24.6),  # 表の K0.5SmCl3.5 行 (-12.3) の 2 倍
+    ]:
+        T = 573.0
+        dG = (
+            DB.G(name, T) - n_k * DB.G("KCl(s)", T) - n_l * DB.G(f"{ln}Cl3(s)", T)
+        ) / 1000
+        assert np.isclose(float(dG), dg573, atol=0.15)
+
+
 def test_oxychloride_estimator_is_consistent():
     """LnOCl の G が 1/3 Ln2O3 + 1/3 LnCl3 + (DH_i, DS_i) の定義どおりであること。
 

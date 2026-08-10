@@ -99,11 +99,15 @@ def test_phase_count_at_most_number_of_metals(gas):
         assert len(asm.phases) <= len(metals)
 
 
-def test_potassium_always_appears_as_kcl(gas):
-    """KCl は K の唯一の候補なので、K がある限り必ず立つ。"""
+def test_potassium_partitions_into_double_salts(gas):
+    """K は複塩に取り込まれ、KCl 単体で立つとは限らない(収支は常に閉じる)。
+
+    K:Sm = 0.3:0.2 では K2SmCl5 が K を消費し尽くし、KCl は残らない。
+    """
     asm = stable_assemblage({"Cu": 0.5, "K": 0.3, "Sm": 0.2}, gas)
-    assert "KCl(s)" in asm.phases
-    assert np.isclose(asm.phases["KCl(s)"], 0.3, rtol=1e-9)
+    assert "K2SmCl5(s)" in asm.phases
+    assert "KCl(s)" not in asm.phases
+    assert np.isclose(asm.metal_balance()["K"], 0.3, rtol=1e-9)
 
 
 def test_zero_amount_metal_gives_binary_section(gas):
@@ -164,15 +168,23 @@ def test_cation_grid_vertices_match_single_metal(gas):
         assert grid.labels[vertex] == stable_assemblage({el: 1.0}, gas).label
 
 
-def test_cation_grid_is_uniform_without_double_salts(gas):
-    """複塩が DB に無いうちは各金属が独立に相を選ぶので、内部は一様になる。
+def test_cation_grid_splits_with_double_salts(gas):
+    """複塩の登録で組成断面が分割されること(複塩仮説の検証そのもの)。
 
-    KCuCl3 や K3LnCl6 を登録したらこのテストは分割を検出して落ちるはずで、
-    そのときは「どう分かれたか」を確認して期待値を更新すること。
+    K-rich 側では Sm が塩化物複塩として保持され(SmOCl が消える)、
+    Sm-rich 側では K が複塩に吸われた残りが SmOCl になる。
+    「Sm は出口で SmOCl」という単一金属の判定は、K 過剰組成では複塩が覆す。
     """
-    grid = cation_grid(gas, "Sm", n=8)
-    interior = [
+    grid = cation_grid(gas, "Sm", n=12)
+    interior = {
         lab for lab, x in zip(grid.labels, grid.coords, strict=True) if (x > 0).all()
-    ]
-    assert len(set(interior)) == 1
-    assert len(next(iter(set(interior)))) == 3
+    }
+    assert len(interior) >= 3
+
+    k_rich = stable_assemblage({"Cu": 0.2, "K": 0.6, "Sm": 0.2}, gas)
+    assert "K3SmCl6(s)" in k_rich.phases
+    assert "SmOCl(s)" not in k_rich.phases
+
+    sm_rich = stable_assemblage({"Cu": 0.1, "K": 0.2, "Sm": 0.7}, gas)
+    assert "SmOCl(s)" in sm_rich.phases
+    assert "K2SmCl5(s)" in sm_rich.phases
